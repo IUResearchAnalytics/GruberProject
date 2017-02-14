@@ -1,4 +1,3 @@
-<<<<<<< HEAD
  library(shiny)
  library(shinyTime)
  library(ggplot2)
@@ -13,6 +12,13 @@ config <- read.table('rshiny.cnf.txt')
 mydb <- dbConnect(MySQL(), user=as.character(config[1,2]), password=as.character(config[2,2]),
                   dbname=as.character(config[3,2]), host=as.character(config[4,2]),
                   port = as.integer(as.character(config[5,2])))
+
+listperson <- dbGetQuery(conn = mydb, statement = "SELECT DISTINCT(ID) FROM intens;")
+numPerson <- dbGetQuery(conn = mydb, statement = "SELECT COUNT(DISTINCT(ID)) FROM intens;")
+dates <- list()
+dates[1] <- dbGetQuery(conn = mydb, statement = "SELECT in_time FROM intens ORDER BY in_time ASC LIMIT 1;")
+dates[2] <- dbGetQuery(conn = mydb, statement = "SELECT in_time FROM intens ORDER BY in_time DESC LIMIT 1;")
+
 
 # mydata <- dbGetQuery(conn = mydb, statement = "SELECT ID, in_time, DATE_FORMAT(in_time, '%Y-%m-%d') as date, intensity 
 #                                                 FROM intens;")
@@ -39,7 +45,7 @@ ui <- pageWithSidebar(
     ),
     
     # Create a dropdown list for selecting person who participated in the project
-    selectInput("person", "Select Person", person)
+    selectInput("person", "Select Person", choices=listperson)
     ),
   
   mainPanel(
@@ -56,8 +62,6 @@ ui <- pageWithSidebar(
 
 
 server <- function(input, output) {
-  person <- dbGetQuery(conn = mydb, statement = "SELECT DISTINCT(ID) FROM intens;")
-  
 
   sqldata <- reactive({
     
@@ -83,13 +87,13 @@ server <- function(input, output) {
   
   output$daterangeText  <- renderText({
     
-    paste("The date range of the existing data is", as.character(min(sqldata()$date)), "to", as.character(max(sqldata()$date)), collapse = "")
+    paste("The date range of the existing data is", unlist(strsplit(dates[[1]], split=' '))[1], "to", unlist(strsplit(dates[[2]], split=' '))[1], collapse = "")
     
   })
   # 
   output$samplesizeText  <- renderText({
     
-    paste("The number of paticipants of the project is", length(unique(sqldata()$ID)), collapse = " ")
+    paste("The number of paticipants of the project is", numPerson, collapse = " ")
     
   })
   
