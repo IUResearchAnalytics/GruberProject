@@ -38,10 +38,18 @@ ui <- pageWithSidebar(
     
     verbatimTextOutput("samplesizeText"),
     
-    dateRangeInput("daterange",
-                   label = "Date range input: yyyy-mm-dd",
-                   start = "2016-05-13", end = "2016-05-14",
-                   startview = "year", weekstart = 1
+    # dateRangeInput("daterange",
+    #                label = "Date range input: yyyy-mm-dd",
+    #                start = "2016-05-13", end = "2016-05-14",
+    #                startview = "year", weekstart = 1
+                   
+                   
+
+dateRangeInput("daterange",
+               label = "Date range input: yyyy-mm-dd",
+               start = as.Date(dates[[1]]), end = as.Date(dates[[1]]) + 2,
+               startview = "year", weekstart = 1                   
+    
     ),
     
     # Create a dropdown list for selecting person who participated in the project
