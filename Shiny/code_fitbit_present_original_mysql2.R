@@ -1,11 +1,11 @@
-# library(shiny)
-# library(shinyTime)
-# library(ggplot2)
-# library(plyr)
-# library(data.table)
-# library(lubridate)
-# library(scales)
-# library(RMySQL)
+ library(shiny)
+ library(shinyTime)
+ library(ggplot2)
+ library(plyr)
+ library(data.table)
+ library(lubridate)
+ library(scales)
+ library(RMySQL)
 
 config <- read.table('rshiny.cnf.txt')
 
@@ -43,9 +43,8 @@ ui <- pageWithSidebar(
     ),
     
     # Create a dropdown list for selecting person who participated in the project
-    selectInput("person", "Select Person", seq(60))
-    
-  ),
+    selectInput("person", "Select Person", person)
+    ),
   
   mainPanel(
     plotOutput("tsplot", height=300, brush = brushOpts(
@@ -61,6 +60,7 @@ ui <- pageWithSidebar(
 
 
 server <- function(input, output) {
+  person <- dbGetQuery(conn = mydb, statement = "SELECT DISTINCT(ID) FROM intens;")
   
   data <- dbGetQuery(conn = mydb, statement = "SELECT ID, in_time, DATE_FORMAT(in_time, '%Y-%m-%d') as date, intensity 
                                                 FROM intens
