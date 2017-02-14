@@ -1,3 +1,4 @@
+<<<<<<< HEAD
  library(shiny)
  library(shinyTime)
  library(ggplot2)
@@ -8,21 +9,16 @@
  library(RMySQL)
 
 config <- read.table('rshiny.cnf.txt')
-
+# 
 mydb <- dbConnect(MySQL(), user=as.character(config[1,2]), password=as.character(config[2,2]),
                   dbname=as.character(config[3,2]), host=as.character(config[4,2]),
                   port = as.integer(as.character(config[5,2])))
 
-# mydata <- dbReadTable(mydb, name = "intens", value = as.data.frame(dbdata))
-# 
-# 
-# mydata2 <- dbGetQuery(conn = mydb, statement = "SELECT ID, in_time, DATE_FORMAT(in_time, '%Y-%m-%d') as date, intensity 
-#                                                 FROM intens
-#                    WHERE DATE_FORMAT(in_time, '%Y-%m-%d') BETWEEN '2016-12-18' AND '2016-12-19'
-#                    AND ID = 46;")
-# 
-# mydata2$in_time <-as.POSIXct(mydata2$in_time)
-# mydata2$date <- as.POSIXct(mydata2$date)
+# mydata <- dbGetQuery(conn = mydb, statement = "SELECT ID, in_time, DATE_FORMAT(in_time, '%Y-%m-%d') as date, intensity 
+#                                                 FROM intens;")
+
+# mydata$in_time <-as.POSIXct(mydata$in_time)
+# mydata$date <- as.POSIXct(mydata$date)
 
 
 # Creat dates and date ranges
@@ -38,7 +34,7 @@ ui <- pageWithSidebar(
     
     dateRangeInput("daterange",
                    label = "Date range input: yyyy-mm-dd",
-                   start = "2016-12-18", end = "2016-12-19",
+                   start = "2016-05-13", end = "2016-05-14",
                    startview = "year", weekstart = 1
     ),
     
@@ -62,26 +58,40 @@ ui <- pageWithSidebar(
 server <- function(input, output) {
   person <- dbGetQuery(conn = mydb, statement = "SELECT DISTINCT(ID) FROM intens;")
   
-  data <- dbGetQuery(conn = mydb, statement = "SELECT ID, in_time, DATE_FORMAT(in_time, '%Y-%m-%d') as date, intensity 
-                                                FROM intens
-                                                WHERE DATE_FORMAT(in_time, '%Y-%m-%d') BETWEEN 'input$daterange[1]' AND 'input$daterange[2]'
-                                                      AND ID = 46;")
+
+  sqldata <- reactive({
+    
+    sql <- "SELECT ID, in_time, DATE_FORMAT(in_time, '%Y-%m-%d') as date, intensity 
+                       FROM intens
+                       WHERE DATE_FORMAT(in_time, '%Y-%m-%d') BETWEEN ?daterange1 AND ?daterange2
+                       AND ID = ?person;"    
+    
+    query <- sqlInterpolate(mydb, sql, daterange1 = as.character(input$daterange[1]),
+                            daterange2 = as.character(input$daterange[2]), 
+                            person = input$person)
+    
+    
+    dbdata <- dbGetQuery(mydb, query)
+    
+    dbdata$in_time <-as.POSIXct(dbdata$in_time)
+    dbdata$date <- as.POSIXct(dbdata$date)    
+    
+    return(dbdata)
+    
+  })
   
-  data$in_time <-as.POSIXct(data$in_time)
-  data$date <- as.POSIXct(data$date)
   
-  
-  # output$daterangeText  <- renderText({
-  #   
-  #   paste("The date range of the existing data is", as.character(min(data$date)), "to", as.character(max(data$date)), collapse = "")
-  #   
-  # })
+  output$daterangeText  <- renderText({
+    
+    paste("The date range of the existing data is", as.character(min(sqldata()$date)), "to", as.character(max(sqldata()$date)), collapse = "")
+    
+  })
   # 
-  # output$samplesizeText  <- renderText({
-  #   
-  #   paste("The number of paticipants of the project is", length(unique(data$ID)), collapse = " ")
-  #   
-  # })
+  output$samplesizeText  <- renderText({
+    
+    paste("The number of paticipants of the project is", length(unique(sqldata()$ID)), collapse = " ")
+    
+  })
   
   
   output$dateRangeText <- renderText({
@@ -89,13 +99,13 @@ server <- function(input, output) {
           paste(as.character(input$dateRange), collapse = " to "))
   })
   
-
   
-  selectedData <- reactive({
+  
+  selectedData <- reactive({    
     
-    dateseq <- seq(input$daterange[1], input$daterange[2], by="day" )
-    
-    a <- subset(data, date %in% dateseq & ID == input$person)
+    a <- subset(sqldata(), date >= as.Date(input$daterange[1]) & 
+                                          date <= as.Date(input$daterange[2]) & 
+                  ID == input$person)
     
     return(a)
     
@@ -105,9 +115,9 @@ server <- function(input, output) {
   
   selectedData2 <- reactive({
     
-    dateseq2 <- seq(input$daterange[1], input$daterange[2], by="day" )
-    
-    data3 <- subset(data, date %in% dateseq2 & ID == input$person)
+    data3 <- subset(sqldata(), date >= as.Date(input$daterange[1]) & 
+                      date <= as.Date(input$daterange[2]) & 
+                      ID == input$person)
     
     # If Intensity large than or equal to 2, then Intensity2 = 1, else Intensity2 = 0
     data3$intensity2 <- ifelse(data3$intensity >= 2, 1, 0)
@@ -164,15 +174,15 @@ server <- function(input, output) {
     
   })
   
-
+  
   ranges <- reactiveValues(x = NULL, y = NULL)
   
   output$tsplot <- renderPlot({
-    
+
     ggplot() +
       geom_area(data=selectedData(), aes(x=in_time, y=intensity)) +
       geom_point(data = selectedData2(), aes(x=in_time, y=classnum, shape=class, colour=class))
-
+    
   })
   
   output$zoomplot <- renderPlot({
@@ -180,7 +190,7 @@ server <- function(input, output) {
     if (!is.null(ranges$x)) {
       ranges$x <- as.POSIXct(ranges$x, origin = "1970-01-01")
     }
-
+    
     ggplot() +
       geom_area(data=selectedData(), aes(x=in_time, y=intensity)) +
       geom_point(data = selectedData2(), aes(x=in_time, y=classnum, shape=class, colour=class)) +
@@ -203,7 +213,7 @@ server <- function(input, output) {
     }
   })
   
-
+  
 }
 
 
