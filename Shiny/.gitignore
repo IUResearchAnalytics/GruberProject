@@ -3,3 +3,6 @@
 _*
 .DS*
 *.o
+*Rdata
+*Rhistory
+*.cnf
