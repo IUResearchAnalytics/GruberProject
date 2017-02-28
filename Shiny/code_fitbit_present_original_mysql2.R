@@ -1,3 +1,12 @@
+#install.packages("shiny") 
+#install.packages("shinyTime") 
+#install.packages("ggplot2") 
+#install.packages("plyr") 
+#install.packages("data.table") 
+#install.packages("lubridate") 
+#install.packages("scales") 
+#install.packages("RMySQL") 
+
  library(shiny)
  library(shinyTime)
  library(ggplot2)
@@ -7,6 +16,9 @@
  library(scales)
  library(RMySQL)
 
+ 
+# I (Stephanie) have the mysql credentials file stored in my P drive on EBIO server:.
+setwd("P:\\Consulting$\\Gruber, Allison\\Fitbit secrets")
 config <- read.table('rshiny.cnf.txt')
 # 
 mydb <- dbConnect(MySQL(), user=as.character(config[1,2]), password=as.character(config[2,2]),
@@ -95,13 +107,13 @@ server <- function(input, output) {
   
   output$daterangeText  <- renderText({
     
-    paste("The date range of the existing data is", unlist(strsplit(dates[[1]], split=' '))[1], "to", unlist(strsplit(dates[[2]], split=' '))[1], collapse = "")
+    paste("Database includes", unlist(strsplit(dates[[1]], split=' '))[1], "to", unlist(strsplit(dates[[2]], split=' '))[1], collapse = "")
     
   })
   # 
   output$samplesizeText  <- renderText({
     
-    paste("The number of paticipants of the project is", numPerson, collapse = " ")
+    paste("The number of paticipants is", numPerson, collapse = " ")
     
   })
   
@@ -175,11 +187,11 @@ server <- function(input, output) {
     data7$class[data7$duration > 90] <- "duration > 90"
     
     
-    data7$classnum[data7$duration <= 15] <- 5
-    data7$classnum[data7$duration > 15 & data7$duration <= 30] <- 5
-    data7$classnum[data7$duration > 30 & data7$duration <= 60] <- 5
-    data7$classnum[data7$duration > 60 & data7$duration <= 90] <- 5
-    data7$classnum[data7$duration > 90] <- 5
+    data7$classnum[data7$duration <= 15] <- 4
+    data7$classnum[data7$duration > 15 & data7$duration <= 30] <- 4
+    data7$classnum[data7$duration > 30 & data7$duration <= 60] <- 4
+    data7$classnum[data7$duration > 60 & data7$duration <= 90] <- 4
+    data7$classnum[data7$duration > 90] <- 4
     
     return(data7)
     
