@@ -39,8 +39,8 @@ browser.get('https://app.fitabase.com/DownloadData/CreateBatch/f4def67f-9081-453
 #log in
 username = browser.find_element_by_id('UserName')
 password = browser.find_element_by_id('Password')
-username.send_keys('ahgruber')
-password.send_keys('iubmlPA2015')
+#username.send_keys('')
+#password.send_keys('')
 login_attempt = browser.find_element_by_xpath("//*[@type='submit']")
 login_attempt.submit()
 
